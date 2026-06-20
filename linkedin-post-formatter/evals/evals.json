@@ -1,0 +1,23 @@
+{
+  "skill_name": "linkedin-post-formatter",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write me a LinkedIn post about how we cut our CI pipeline time from 45 minutes to 6 minutes by parallelizing test suites and caching dependencies. I'm a staff engineer and want it to land with other engineers. Tag my teammate @[Priya Nair] who led the work.",
+      "expected_output": "A ready-to-paste LinkedIn post: strong hook in first 1-2 lines, airy line spacing, a few key phrases in Unicode bold, the mention rendered as @Priya Nair, 3-5 hashtags at the end, a closing question/CTA, under 3000 chars. A formatted .txt file produced via the script with a reported char count.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Turn this rough draft into a good LinkedIn post. Make the important parts bold. 'we just launched our new analytics dashboard. it shows real time metrics. customers asked for this for a long time. it has custom reports and alerts. try it and tell us what you think. link: https://acme.example.com/dashboard'",
+      "expected_output": "A restructured announcement post with a benefit-led hook (not 'we just launched'), Unicode bold on a few key phrases only, the URL left unstyled and intact, white space between short blocks, a CTA, hashtags, under 3000 chars, delivered as a formatted file with char count.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "I need a short punchy LinkedIn post sharing one contrarian lesson: most standups are a waste of time and async written updates work better. Keep it under 800 characters and end with a question to drive comments.",
+      "expected_output": "A short (<800 char) post with a contrarian hook, minimal/judicious bold, generous line breaks, ends with an engagement question, a few hashtags, and the script-reported count confirming it is under 800.",
+      "files": []
+    }
+  ]
+}

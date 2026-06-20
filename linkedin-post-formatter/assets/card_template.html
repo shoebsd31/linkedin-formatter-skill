@@ -1,0 +1,63 @@
+<!--
+  LinkedIn post copy-card template for the show_widget tool.
+
+  HOW TO USE
+  1. Replace {{CHAR_COUNT}} with the count from the script (e.g. 1,742).
+  2. Replace {{POST_TEXT}} with the styled post text the script printed to
+     stdout — verbatim, preserving line breaks. No markdown markers, no code
+     fences. The Copy button copies this div's innerText, so it must be pristine.
+  3. Replace {{MENTION_REMINDER}} with the reminder line, e.g.
+     'After pasting, retype the @ before "Jane Doe" and pick her from LinkedIn's
+     dropdown to make it a real tag.' If the post has no @[Name] mentions, delete
+     the whole <p id="reminder"> line.
+
+  Pass the result as `widget_code` to show_widget (HTML mode).
+-->
+<div style="padding: 0.5rem 0;">
+  <h2 class="sr-only">LinkedIn-ready post with a copy button</h2>
+  <div style="background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--color-background-info); display: flex; align-items: center; justify-content: center; font-weight: 500; font-size: 14px; color: var(--color-text-info);">in</div>
+        <div>
+          <p style="font-weight: 500; font-size: 14px; margin: 0;">LinkedIn-ready post</p>
+          <p style="font-size: 12px; color: var(--color-text-secondary); margin: 0;">{{CHAR_COUNT}} / 3,000 characters</p>
+        </div>
+      </div>
+      <button id="copyBtn" aria-label="Copy post" style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 12px; width: auto;">
+        <i class="ti ti-copy" aria-hidden="true"></i><span id="copyLabel">Copy</span>
+      </button>
+    </div>
+    <div id="post" style="white-space: pre-wrap; font-size: 15px; line-height: 1.6; color: var(--color-text-primary); border-top: 0.5px solid var(--color-border-tertiary); padding-top: 12px;">{{POST_TEXT}}</div>
+    <p id="reminder" style="font-size: 12px; color: var(--color-text-secondary); margin: 12px 0 0;"><i class="ti ti-info-circle" aria-hidden="true" style="font-size:14px; vertical-align:-2px; margin-right:4px"></i>{{MENTION_REMINDER}}</p>
+  </div>
+  <script>
+    (function () {
+      var btn = document.getElementById('copyBtn');
+      var label = document.getElementById('copyLabel');
+      var post = document.getElementById('post');
+      function done() {
+        label.textContent = 'Copied';
+        btn.querySelector('i').className = 'ti ti-check';
+        setTimeout(function () {
+          label.textContent = 'Copy';
+          btn.querySelector('i').className = 'ti ti-copy';
+        }, 1800);
+      }
+      function fallback() {
+        var r = document.createRange(); r.selectNodeContents(post);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        try { document.execCommand('copy'); } catch (e) {}
+        s.removeAllRanges(); done();
+      }
+      btn.addEventListener('click', function () {
+        var text = post.innerText;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done, fallback);
+        } else {
+          fallback();
+        }
+      });
+    })();
+  </script>
+</div>
