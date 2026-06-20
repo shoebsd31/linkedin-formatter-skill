@@ -28,6 +28,14 @@ import unicodedata
 LINKEDIN_LIMIT = 3000
 LINKEDIN_WARNING = 2800
 
+# Hard ceiling on how much text we will parse. LinkedIn's own limit is 3000
+# characters, so 5000 leaves comfortable headroom for an untrimmed draft while
+# staying well below the size at which densely-alternating markup can drive the
+# regex engine into super-linear backtracking. A runaway regex runs in C and
+# cannot be interrupted from Python, so capping the INPUT is the only reliable
+# denial-of-service guard.
+MAX_INPUT_CHARS = 5000
+
 TOKEN_PATTERN = re.compile(
     r"(https?://[^\s]+|[#@][A-Za-z0-9_][A-Za-z0-9_.\-]*)", re.UNICODE
 )
@@ -125,21 +133,30 @@ INLINE_RULES = [
 def render_markup(text, **active):
     # Pick the EARLIEST match across all rules (ties broken by rule order, i.e.
     # most-specific marker first). Choosing by position rather than by rule lets
-    # an outer marker win over an inner one in interleaved cases like
-    # ~~__x__~~, so both styles are applied.
-    best = None
-    for pattern, opts in INLINE_RULES:
-        m = pattern.search(text)
-        if m and (best is None or m.start() < best[0].start()):
-            best = (m, opts)
-    if best:
+    # an outer marker win over an inner one in interleaved cases like ~~__x__~~,
+    # so both styles are applied.
+    #
+    # The scan over the tail is iterative rather than recursive: a post with many
+    # sequential markers (e.g. "**a** **b** **c** ...") would otherwise recurse
+    # once per marker and overflow Python's stack (RecursionError) on adversarial
+    # input. Only genuine *nesting* recurses (m.group(1)), and that depth is tiny.
+    out = []
+    while True:
+        best = None
+        for pattern, opts in INLINE_RULES:
+            m = pattern.search(text)
+            if m and (best is None or m.start() < best[0].start()):
+                best = (m, opts)
+        if best is None:
+            out.append(style_text(text, **active) if active else text)
+            return "".join(out)
         m, opts = best
-        before = render_markup(text[:m.start()], **active)
+        # Text before the earliest match has no earlier marker, so style it directly.
+        before = text[:m.start()]
+        out.append(style_text(before, **active) if active else before)
         merged = {**active, **{k: active.get(k, False) or v for k, v in opts.items()}}
-        inner = render_markup(m.group(1), **merged)
-        after = render_markup(text[m.end():], **active)
-        return before + inner + after
-    return style_text(text, **active) if active else text
+        out.append(render_markup(m.group(1), **merged))  # nesting only — shallow
+        text = text[m.end():]  # continue scanning the tail iteratively
 
 
 def flatten_mentions(text):
@@ -158,6 +175,11 @@ def strip_heading_markers(text):
 
 
 def format_post(text):
+    if len(text) > MAX_INPUT_CHARS:
+        raise ValueError(
+            f"input is {len(text)} characters; refusing to format more than "
+            f"{MAX_INPUT_CHARS} (LinkedIn's limit is {LINKEDIN_LIMIT})."
+        )
     text = strip_heading_markers(text)
     text = flatten_mentions(text)
     return render_markup(text).strip()
@@ -193,7 +215,11 @@ def main(argv=None):
     else:
         raw = sys.stdin.read()
 
-    formatted = format_post(raw)
+    try:
+        formatted = format_post(raw)
+    except ValueError as exc:
+        sys.stderr.write(f"[error] {exc}\n")
+        return 2
     sys.stdout.write(formatted + "\n")
     sys.stderr.write(report(formatted) + "\n")
 

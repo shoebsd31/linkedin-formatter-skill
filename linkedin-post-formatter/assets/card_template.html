@@ -4,9 +4,13 @@
   HOW TO USE
   1. Replace {{CHAR_COUNT}} with the count from the script (e.g. 1,742).
   2. Replace {{POST_TEXT}} with the styled post text the script printed to
-     stdout — verbatim, preserving line breaks. No markdown markers, no code
-     fences. The Copy button copies this div's innerText, so it must be pristine.
-  3. Replace {{MENTION_REMINDER}} with the reminder line, e.g.
+     stdout, preserving line breaks. No markdown markers, no code fences.
+     SECURITY: HTML-escape it first — turn & into &amp;, < into &lt;, > into
+     &gt;. The post text derives from user input; substituting it raw would let
+     crafted input inject markup into this card (HTML/template injection). The
+     Unicode styling glyphs are unaffected by escaping, and the Copy button
+     still copies the pristine text via innerText (the browser un-escapes it).
+  3. Replace {{MENTION_REMINDER}} with the reminder line (also HTML-escaped), e.g.
      'After pasting, retype the @ before "Jane Doe" and pick her from LinkedIn's
      dropdown to make it a real tag.' If the post has no @[Name] mentions, delete
      the whole <p id="reminder"> line.

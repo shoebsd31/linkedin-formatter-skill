@@ -113,11 +113,15 @@ LinkedIn.
 
 Build the card from the template in `assets/card_template.html`. Read that file,
 then substitute three things:
-- the styled post text the script printed to stdout (drop it verbatim into the
-  `<div id="post">…</div>`, preserving line breaks — no markup, no code fences),
+- the styled post text the script printed to stdout (drop it into the
+  `<div id="post">…</div>`, preserving line breaks — no markup, no code fences).
+  **HTML-escape it first** (`&`→`&amp;`, `<`→`&lt;`, `>`→`&gt;`): the text comes
+  from user input, so substituting it raw would let crafted input inject markup
+  into the card. Escaping leaves the Unicode styling untouched and the Copy
+  button still copies clean text via `innerText`.
 - the character count in the header (e.g. `1,742`),
-- the mention reminder line (name the person to retype the `@` for, or remove
-  the line if the post has no `@[Name]` mentions).
+- the mention reminder line, HTML-escaped too (name the person to retype the
+  `@` for, or remove the line if the post has no `@[Name]` mentions).
 
 The card's Copy button copies `post.innerText`, so whatever you place in that div
 is exactly what lands on the clipboard. Keep the post text pristine.

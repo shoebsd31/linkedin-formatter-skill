@@ -76,5 +76,19 @@ check_true("report flags an over-limit post",
 check_true("report says OK for a short post",
            "OK" in fl.report("a short post"))
 
+print("\nSecurity hardening regressions:")
+# Call render_markup directly (bypassing the input-size guard) to prove the
+# parser itself no longer overflows the stack on many sequential markers.
+check_true("2000 sequential markers parse without RecursionError",
+           isinstance(fl.render_markup("**a**" * 2000), str))
+check_true("a heavily-marked-up in-range post formats fine",
+           isinstance(fl.format_post("**a** *b* ~~c~~ " * 250), str))
+try:
+    fl.format_post("x" * (fl.MAX_INPUT_CHARS + 1))
+    _guard_ok = False
+except ValueError:
+    _guard_ok = True
+check_true("oversized input is refused with ValueError (DoS guard)", _guard_ok)
+
 print(f"\n{passed} passed, {failed} failed")
 sys.exit(0 if failed == 0 else 1)
